@@ -137,6 +137,7 @@ key.properties
 !/tools/create_update_fixtures.py
 !/tools/update-mirror/
 !/tools/generate_report_art.py
+!/tools/generate_app_icons.py
 
 # Cloudflare local build cache and local-only secrets
 .wrangler/

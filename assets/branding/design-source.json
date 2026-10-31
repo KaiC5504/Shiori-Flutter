@@ -1,7 +1,11 @@
 {
-  "background": "#272727",
   "foreground": "app-icon-source.png",
-  "adaptiveArtworkSide": 84,
-  "artworkScale": 0.88,
-  "artwork": "User-approved milk-white anime silhouette with a braid and bookmark hair clip on charcoal"
+  "generator": "tools/generate_app_icons.py",
+  "masterSize": 4096,
+  "appearances": {
+    "light": { "background": "#F2ECE3", "silhouette": "#24222A", "ribbonRim": "#0E0D12", "ribbonPanel": ["#B79CF2", "#7650C9"] },
+    "dark": { "background": "#262626", "silhouette": "#F7F3EE", "ribbonRim": "#16151B", "ribbonPanel": ["#B79CF2", "#7650C9"] },
+    "tinted": { "background": "#000000", "silhouette": "#FFFFFF", "ribbon": "#9A9A9A" }
+  },
+  "artwork": "User-approved paper-cut silhouette, eyes closed, with a pair of butterfly ribbons in violet and black"
 }

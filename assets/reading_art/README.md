@@ -16,7 +16,7 @@ date, book title, badge and quotation is laid out separately from live data.
 | `ink-117` | 云间书信 | Jade robe, vermilion bookmark ribbon and flat cloud bands |
 | `festival-117` | 晴空来信 | Blue-shirt reader by a bright train window, orange tote |
 
-The five character illustrations derive from `assets/branding/app-icon-source.png`:
+The five character illustrations derive from the earlier app icon (since replaced in `assets/branding/`):
 silver asymmetric hair, a single side braid and the bookmark-shaped clip. The
 normal themes use their small illustrations as supporting material; real book
 covers and reading data remain the main subject.
