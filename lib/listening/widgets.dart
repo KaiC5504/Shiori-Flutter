@@ -13,11 +13,9 @@ import '../ui_notifiers.dart';
 import 'controller.dart';
 import 'models.dart';
 import 'languages.dart';
-import 'custom_tts_page.dart';
 import 'system_tts_page.dart';
 import 'listening_speed_control.dart';
 import 'reader_target.dart';
-import 'enhancement_controls.dart';
 
 class ListeningScope extends InheritedWidget {
   const ListeningScope({
@@ -109,16 +107,6 @@ class _ListeningPanelState extends State<ListeningPanel> {
       ),
     );
     if (voice != null && mounted) await _voice(voice);
-  }
-
-  Future<void> _configureCustom() async {
-    final settings = widget.controller.customSpeech;
-    if (settings == null) return;
-    await pushNovelPage<void>(
-      context,
-      CustomSpeechPage(settings: settings, controller: widget.controller),
-      reduceMotion: MediaQuery.disableAnimationsOf(context),
-    );
   }
 
   Future<void> _act(Future<void> Function() action) async {
@@ -658,12 +646,6 @@ class _ListeningPanelState extends State<ListeningPanel> {
                 ),
               ),
               const SizedBox(height: 12),
-              ListeningEnhancementSettings(
-                enhancement: widget.controller.enhancement,
-                onChanged: (value) =>
-                    _act(() => widget.controller.setEnhancement(value)),
-              ),
-              const SizedBox(height: 12),
               Row(
                 children: [
                   const Expanded(child: AppText('跟随朗读段落')),
@@ -735,11 +717,6 @@ class _ListeningPanelState extends State<ListeningPanel> {
                     '自然在线',
                     textAlign: TextAlign.center,
                   ),
-                  if (widget.controller.customSpeech != null)
-                    ListeningSource.custom: const AppText(
-                      '自定义',
-                      textAlign: TextAlign.center,
-                    ),
                   ListeningSource.system: const AppText(
                     '系统引擎',
                     textAlign: TextAlign.center,
@@ -750,22 +727,12 @@ class _ListeningPanelState extends State<ListeningPanel> {
                     await _voice(defaultEdgeVoice);
                   }
                   if (source == ListeningSource.system) await _systemEngine();
-                  if (source == ListeningSource.custom) {
-                    final config = widget.controller.customSpeech?.config;
-                    if (config == null) {
-                      await _configureCustom();
-                    } else {
-                      await _voice(config.voice);
-                    }
-                  }
                 },
               ),
               const SizedBox(height: 12),
               AppText(
                 source == ListeningSource.system
                     ? '使用手机安装的 TTS 引擎，语音数据与联网方式由引擎管理。'
-                    : source == ListeningSource.custom
-                    ? '使用你配置的 Microsoft SSML 兼容接口。'
                     : 'Edge 神经网络音色 · 免费，无需登录。未缓存语段需联网生成；已生成语音可直接复用。',
                 style: TextStyle(
                   fontSize: 12,
@@ -779,12 +746,6 @@ class _ListeningPanelState extends State<ListeningPanel> {
                 onPressed: _systemEngine,
                 child: const AppText('选择系统朗读引擎'),
               ),
-              if (widget.controller.customSpeech != null)
-                GlassTextButton(
-                  key: const ValueKey('listening-custom-endpoint'),
-                  onPressed: _configureCustom,
-                  child: const AppText('配置自定义语音接口'),
-                ),
               const SizedBox(height: 12),
               const AppText(
                 '分语言音色',

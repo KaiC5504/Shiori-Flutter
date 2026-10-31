@@ -15,6 +15,13 @@ diagnostic entries and keep chapter-level listening progress/media metadata.
 Modified on 2026-10-17 to refine paragraph/column page turns, preserve EPUB
 image dimensions, add author work lists and retain complete login sessions.
 
+Shiori fork (KaiC5504), modified 2026-10-31: removed the Wenku8 online
+catalogue, account, cloud shelf, LAN reading sync, custom speech endpoints and
+listening enhancement; rebuilt local import batches, folder scanning, portable
+format conversion (ZIP, Kindle, DOCX, FB2, HTML, Markdown, RTF, PDF), the
+paper page-turn geometry and home-widget card rendering; generated new report
+artwork (tools/generate_report_art.py); added an unsigned iOS IPA workflow.
+
 The project provides presentation, local library and reader source.
 The licenses of included third-party components remain applicable; this notice
 does not change their source or attribution requirements.

@@ -169,14 +169,6 @@ class OfflineNovelRepository extends FrameChangeNotifier
     int page = 1,
     bool refresh = false,
   }) async {
-    if (!offline) {
-      return remote.searchFilteredPage(
-        query,
-        field: field,
-        page: page,
-        refresh: refresh,
-      );
-    }
     await cache.load();
     final pattern = BookSearch(query, field: field);
     final books = <int, Novel>{
@@ -208,15 +200,6 @@ class OfflineNovelRepository extends FrameChangeNotifier
     bool Function()? current,
     void Function(TagSearchProgress)? onProgress,
   }) {
-    if (!offline && remote is ProgressiveTagCatalogue) {
-      return (remote as ProgressiveTagCatalogue).tagPage(
-        tag,
-        page: page,
-        refresh: refresh,
-        current: current,
-        onProgress: onProgress,
-      );
-    }
     return searchFilteredPage(
       tag,
       field: BookSearchField.tags,
@@ -231,9 +214,6 @@ class OfflineNovelRepository extends FrameChangeNotifier
     int page = 1,
     bool refresh = false,
   }) async {
-    if (!offline) {
-      return remote.authorPage(author, page: page, refresh: refresh);
-    }
     final books = <int, Novel>{
       for (final entry in cache.books)
         if (entry.cachedCount > 0) entry.novel.id: entry.novel,

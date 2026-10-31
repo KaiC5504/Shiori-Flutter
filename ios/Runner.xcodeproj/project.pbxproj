@@ -29,7 +29,6 @@
 		A014F0010000000000000005 /* NativeNetworkPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = A014F0020000000000000005 /* NativeNetworkPlugin.swift */; };
 		A014F0010000000000000006 /* NativeSecureRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = A014F0020000000000000006 /* NativeSecureRecord.swift */; };
 		A014F0010000000000000007 /* NativeSystemSpeechPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = A014F0020000000000000007 /* NativeSystemSpeechPlugin.swift */; };
-		A014F0010000000000000008 /* NativeLanDiscoveryPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = A014F0020000000000000008 /* NativeLanDiscoveryPlugin.swift */; };
 		A014F0010000000000000009 /* BookFolderScanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = A014F0020000000000000009 /* BookFolderScanner.swift */; };
 		A014F001000000000000000A /* NativeBookConversion.swift in Sources */ = {isa = PBXBuildFile; fileRef = A014F002000000000000000A /* NativeBookConversion.swift */; };
 		A014F001000000000000000B /* NativePdfImport.swift in Sources */ = {isa = PBXBuildFile; fileRef = A014F002000000000000000B /* NativePdfImport.swift */; };
@@ -121,7 +120,6 @@
 		A014F0020000000000000005 /* NativeNetworkPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeNetworkPlugin.swift; sourceTree = "<group>"; };
 		A014F0020000000000000006 /* NativeSecureRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeSecureRecord.swift; sourceTree = "<group>"; };
 		A014F0020000000000000007 /* NativeSystemSpeechPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeSystemSpeechPlugin.swift; sourceTree = "<group>"; };
-		A014F0020000000000000008 /* NativeLanDiscoveryPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeLanDiscoveryPlugin.swift; sourceTree = "<group>"; };
 		A014F0020000000000000009 /* BookFolderScanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookFolderScanner.swift; sourceTree = "<group>"; };
 		A014F002000000000000000A /* NativeBookConversion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeBookConversion.swift; sourceTree = "<group>"; };
 		A014F002000000000000000B /* NativePdfImport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativePdfImport.swift; sourceTree = "<group>"; };
@@ -252,7 +250,6 @@
 				A014F0020000000000000005 /* NativeNetworkPlugin.swift */,
 				A014F0020000000000000006 /* NativeSecureRecord.swift */,
 				A014F0020000000000000007 /* NativeSystemSpeechPlugin.swift */,
-				A014F0020000000000000008 /* NativeLanDiscoveryPlugin.swift */,
 				A014F0020000000000000009 /* BookFolderScanner.swift */,
 				A014F002000000000000000A /* NativeBookConversion.swift */,
 				A014F002000000000000000B /* NativePdfImport.swift */,
@@ -523,7 +520,6 @@
 				A014F0010000000000000005 /* NativeNetworkPlugin.swift in Sources */,
 				A014F0010000000000000006 /* NativeSecureRecord.swift in Sources */,
 				A014F0010000000000000007 /* NativeSystemSpeechPlugin.swift in Sources */,
-				A014F0010000000000000008 /* NativeLanDiscoveryPlugin.swift in Sources */,
 				A014F0010000000000000009 /* BookFolderScanner.swift in Sources */,
 				A014F001000000000000000A /* NativeBookConversion.swift in Sources */,
 				A014F001000000000000000B /* NativePdfImport.swift in Sources */,

@@ -18,7 +18,6 @@ import 'reading_statistics_charts.dart';
 import 'reading_statistics_data.dart';
 import 'reading_statistics_analysis_view.dart';
 import 'reading_report_options.dart';
-import 'reading_report_page.dart';
 import 'reading_report_range.dart';
 import 'reading_moments_ui.dart';
 import 'reading_touch_page.dart';
@@ -234,17 +233,6 @@ class _ReadingStatisticsPageState extends State<ReadingStatisticsPage>
     ),
   );
 
-  void _report() => pushNovelPage<void>(
-    context,
-    ReadingReportPage(
-      state: widget.state,
-      repository: widget.repository,
-      now: widget.now,
-      initialRange: _range,
-    ),
-    reduceMotion: widget.state.reduceMotion,
-  );
-
   void _bind() {
     final repository = widget.repository;
     _changes = Listenable.merge([
@@ -405,14 +393,6 @@ class _ReadingStatisticsPageState extends State<ReadingStatisticsPage>
     child: ArchiveFeaturePage(
       title: '统计',
       code: 'PERSONAL / READING RECORDS',
-      actions: [
-        GlassIconButton(
-          key: const ValueKey('statistics-make-report'),
-          icon: CupertinoIcons.doc_text,
-          label: '制作图片报告',
-          onPressed: _report,
-        ),
-      ],
       child: LayoutBuilder(
         builder: (context, constraints) {
           final categories = _categories;

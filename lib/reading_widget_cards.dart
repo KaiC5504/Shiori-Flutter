@@ -254,7 +254,6 @@ class ReadingWidgetCards extends ChangeNotifier {
           images = previous!.images;
         } else {
           images = {};
-          await warmReadingDesktopImages(value);
           for (final brightness in Brightness.values) {
             for (final size in ReadingDesktopSize.values) {
               final bytes = await renderReadingDesktopCard(

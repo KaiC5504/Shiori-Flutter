@@ -136,11 +136,8 @@ class BookDocuments {
       final cache = await getTemporaryDirectory();
       final directory = Directory('${cache.path}/portable-book-import');
       await PortableBookPreparer.clearPreviousRuns(directory);
-      final token = ServicesBinding.rootIsolateToken;
-      if (token == null) throw StateError('文件转换服务尚未初始化，请重试');
       return PortableBookPreparer(
         directory: directory,
-        textCodecToken: token,
         decodeNames: (names) async => (await channel.invokeListMethod<String>(
           'decodeBookNames',
           {'names': names},

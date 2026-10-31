@@ -5,7 +5,6 @@ import 'package:path_provider/path_provider.dart';
 import 'edge_tts.dart';
 import 'models.dart';
 import 'languages.dart';
-import 'custom_tts.dart';
 import '../network_status.dart';
 
 abstract interface class SpeechAudioSource {
@@ -45,16 +44,8 @@ extension SpeechPlaybackMaintenance on SpeechAudioSource {
 }
 
 class SpeechAudioCache implements SpeechAudioSource, SpeechLanguageVoiceSource {
-  SpeechAudioCache(
-    this.directory,
-    this.edge, {
-    this.customSpeech,
-    this.network,
-    CustomSpeechClient? customClient,
-  }) : customClient = customClient ?? CustomSpeechClient();
-  final CustomSpeechSettings? customSpeech;
+  SpeechAudioCache(this.directory, this.edge, {this.network});
   final NetworkStatus? network;
-  final CustomSpeechClient customClient;
   final Directory directory;
   final EdgeSpeechClient edge;
   static const system = MethodChannel('org.mewx.wenku8/system_speech');
@@ -66,15 +57,12 @@ class SpeechAudioCache implements SpeechAudioSource, SpeechLanguageVoiceSource {
   DateTime _nextPlaybackTrim = DateTime.fromMillisecondsSinceEpoch(0);
   int _writtenSinceTrim = 0;
   static const maximumBytes = 96 * 1024 * 1024;
-  static Future<SpeechAudioCache> forApp({
-    CustomSpeechSettings? customSpeech,
-    NetworkStatus? network,
-  }) async => SpeechAudioCache(
-    Directory('${(await getTemporaryDirectory()).path}/listening-audio-v1'),
-    EdgeSpeechClient(),
-    customSpeech: customSpeech,
-    network: network,
-  );
+  static Future<SpeechAudioCache> forApp({NetworkStatus? network}) async =>
+      SpeechAudioCache(
+        Directory('${(await getTemporaryDirectory()).path}/listening-audio-v1'),
+        EdgeSpeechClient(),
+        network: network,
+      );
 
   Future<T> _native<T>(Future<T> Function() action) {
     final next = _nativeQueue.then((_) => action());
@@ -191,11 +179,8 @@ class SpeechAudioCache implements SpeechAudioSource, SpeechLanguageVoiceSource {
         kind: SpeechFailureKind.missingLanguage,
       );
     }
-    if (voice.source == ListeningSource.custom &&
-        (customSpeech?.config?.namespace != voice.engine ||
-            customSpeech?.config?.voiceId != voice.id ||
-            customSpeech?.config?.locale != voice.locale)) {
-      throw const SpeechFailure('请重新选择或配置自定义语音接口');
+    if (voice.source == ListeningSource.custom) {
+      throw const SpeechFailure('自定义语音接口已移除，请重新选择语音');
     }
     final key = segment.key(voice);
     final pending = _pending[key];
@@ -248,21 +233,6 @@ class SpeechAudioCache implements SpeechAudioSource, SpeechLanguageVoiceSource {
       try {
         if (voice.source == ListeningSource.edge) {
           final data = await edge.synthesize(text, voice, cancellation);
-          cancellation.check();
-          await temporary.writeAsBytes(data, flush: true);
-        } else if (voice.source == ListeningSource.custom) {
-          final config = customSpeech?.config;
-          if (config == null ||
-              config.namespace != voice.engine ||
-              config.voiceId != voice.id ||
-              config.locale != voice.locale) {
-            throw const SpeechFailure('请重新选择或配置自定义语音接口');
-          }
-          final data = await customClient.synthesize(
-            text,
-            config,
-            cancellation,
-          );
           cancellation.check();
           await temporary.writeAsBytes(data, flush: true);
         } else {

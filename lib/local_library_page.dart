@@ -27,7 +27,6 @@ import 'local_book_importer.dart';
 import 'local_library_preferences.dart';
 import 'local_series_editor.dart';
 import 'local_book_removal.dart';
-import 'local_book_batch_page.dart';
 import 'pages.dart' show NovelRow;
 import 'ui_notifiers.dart';
 
@@ -358,11 +357,6 @@ class _LocalLibraryPageState extends State<LocalLibraryPage>
     await _importer.showMenu(
       anchor,
       sync: _sync,
-      onBatch: () => openLocalBookBatch(
-        context,
-        books: widget.books,
-        library: widget.state,
-      ),
     );
     if (mounted) _reload();
   }
@@ -532,14 +526,6 @@ class _LocalLibraryPageState extends State<LocalLibraryPage>
                       CupertinoIcons.rectangle_stack,
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: action(
-                      '_batch',
-                      '批量选择',
-                      CupertinoIcons.checkmark_circle,
-                    ),
-                  ),
                 ],
               ),
               const SizedBox(height: 8),
@@ -559,13 +545,6 @@ class _LocalLibraryPageState extends State<LocalLibraryPage>
       await _volumes(book);
     } else if (value == '_delete') {
       await _remove(book);
-    } else if (value == '_batch') {
-      await openLocalBookBatch(
-        context,
-        books: widget.books,
-        library: widget.state,
-        selected: {book.id},
-      );
     } else {
       await _save(() => organization.assign(book.id, value));
     }

@@ -30,9 +30,6 @@ import UIKit
     if let registrar = engineBridge.pluginRegistry.registrar(forPlugin: "NativeSystemSpeechPlugin") {
       NativeSystemSpeechPlugin.register(with: registrar)
     }
-    if let registrar = engineBridge.pluginRegistry.registrar(forPlugin: "NativeLanDiscoveryPlugin") {
-      NativeLanDiscoveryPlugin.register(with: registrar)
-    }
     if let registrar = engineBridge.pluginRegistry.registrar(forPlugin: "AppHapticsPlugin") {
       AppHapticsPlugin.register(with: registrar)
     }

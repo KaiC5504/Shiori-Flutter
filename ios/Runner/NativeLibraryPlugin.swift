@@ -231,7 +231,13 @@ final class NativeLibraryPlugin: NSObject, FlutterPlugin, UIDocumentPickerDelega
       }
       return try conversion.extractKindle(path, output: output)
     case "prepareBook", "prepareLinkedDocument":
-      if (args["name"] as? String ?? "").lowercased().hasSuffix(".doc") {
+      let name = args["name"] as? String ?? ""
+      if method == "prepareBook", name.lowercased().hasSuffix(".rtf"), let path = args["path"] as? String {
+        let cache = try FileManager.default.url(for: .cachesDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
+        return try NativeBookConversion(documents: store(), portableRoot: cache.appendingPathComponent("portable-book-import", isDirectory: true))
+          .prepareRtf(name: name, path: path)
+      }
+      if name.lowercased().hasSuffix(".doc") {
         throw BookDocumentFailure(code: "format_unavailable", message: "此设备暂不支持二进制 DOC，请将原文件另存为 DOCX、RTF 或 EPUB 后导入")
       }
       throw BookDocumentFailure(code: "format_unavailable", message: "此平台正在适配此格式，请先导入 EPUB 或 TXT")

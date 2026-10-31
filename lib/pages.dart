@@ -20,7 +20,6 @@ import 'illustration_layout_page.dart';
 import 'illustration_placement.dart';
 import 'automatic_illustrations.dart';
 import 'local_book_series.dart';
-import 'local_book_batch_page.dart';
 import 'app_interactions.dart';
 import 'author_works_page.dart';
 import 'archive_carousel.dart';
@@ -58,7 +57,6 @@ import 'library_search_repository.dart';
 import 'listening/controller.dart';
 import 'listening/models.dart' show hasSpeechText, ListeningPhase;
 import 'listening/widgets.dart';
-import 'listening/custom_tts_page.dart';
 import 'listening/reader_target.dart';
 import 'local_platform.dart';
 import 'local_books.dart';
@@ -69,7 +67,6 @@ import 'local_book_importer.dart';
 import 'local_text_reference.dart';
 import 'local_text_recovery.dart';
 import 'native_effects.dart' show NativeGlassGroup;
-import 'lan_handoff_widgets.dart';
 import 'network_status.dart';
 import 'novel_feed_controller.dart';
 import 'offline_repository.dart';
@@ -100,8 +97,6 @@ import 'reader_book_find.dart';
 import 'reader_annotations.dart';
 import 'reader_annotation_editor.dart';
 import 'reader_embedded_vertical.dart';
-import 'lan_reading_sync.dart';
-import 'lan_reading_page.dart';
 import 'reader_pagination.dart';
 import 'reader_paged_view.dart';
 import 'reader_vertical_text.dart';
@@ -643,9 +638,6 @@ class HomeShellState extends State<HomeShell> with TickerProviderStateMixin {
                                   repository: widget.repository,
                                   onOpenBook: _dismissSearchKeyboard,
                                   allowBlockedTags: _searchScope == 0,
-                                  showSources:
-                                      _searchScope == 1 &&
-                                      widget.state.combinedShelf,
                                   fromCache:
                                       _searchScope == 1 &&
                                       _navigation.readableShelfOnly,
@@ -2164,9 +2156,6 @@ class _ShelfPageState extends State<ShelfPage>
       reduceMotion: state.reduceMotion,
       animateEntrance: true,
       repeatFill: state.shelfPreferences.repeatFill,
-      sourceLabel: state.combinedShelf
-          ? (book) => bookshelfSource(book.id, _offline)
-          : null,
       onOpen: (book, tag) => openDetail(
         context,
         book,
@@ -2459,15 +2448,7 @@ class _ShelfPageState extends State<ShelfPage>
                             ),
                             const SizedBox(height: 18),
                             AppText(
-                              all.isNotEmpty ||
-                                      state.combinedShelf &&
-                                          state.shelfSourceFilter != 'all'
-                                  ? '没有符合条件的书'
-                                  : _cacheOnly
-                                  ? '没有可离线阅读的书'
-                                  : state.shelf.isEmpty
-                                  ? '书架还空着'
-                                  : '没有符合条件的书',
+                              all.isNotEmpty ? '没有符合条件的书' : '书架还空着',
                               style: const TextStyle(
                                 fontSize: 17,
                                 fontWeight: FontWeight.w600,
@@ -2475,14 +2456,8 @@ class _ShelfPageState extends State<ShelfPage>
                             ),
                             const SizedBox(height: 8),
                             AppText(
-                              _cacheOnly
-                                  ? state.combinedShelf
-                                        ? '已缓存的收藏和本地导入书籍会显示在这里'
-                                        : '已缓存正文的收藏会显示在这里，本地导入请到「本地」阅读'
-                                  : state.combinedShelf && all.isEmpty
-                                  ? '收藏喜欢的书，或点击右上角 ＋ 导入书籍'
-                                  : state.shelf.isEmpty
-                                  ? '在发现页收藏喜欢的书'
+                              all.isEmpty
+                                  ? '点击右上角导入书籍，或关联一个文件夹自动导入'
                                   : '试试其他关键词或切回全部',
                               textAlign: TextAlign.center,
                               style: TextStyle(
@@ -2569,8 +2544,7 @@ class _ShelfPageState extends State<ShelfPage>
         filterKey: const ValueKey('shelf-filter'),
         viewKey: const ValueKey('shelf-view'),
         activeFilters:
-            (state.shelfFilter == 'all' ? 0 : 1) +
-            (state.combinedShelf && state.shelfSourceFilter != 'all' ? 1 : 0),
+            state.shelfFilter == 'all' ? 0 : 1,
         onCategory: _lowerShelfCategories,
         onFilter: _libraryOptions,
         onView: () => _viewOptions(target: BookCollectionViewTarget.collection),
@@ -2633,14 +2607,7 @@ class _ShelfPageState extends State<ShelfPage>
           value: state.shelfContent,
           onChanged: _saveShelfContent,
           categoryOptions: _shelfContentCategories,
-          sourceOptions: state.combinedShelf
-              ? const {
-                  'all': '全部来源',
-                  'local': '本地导入',
-                  'cached': '已缓存',
-                  'online': '在线收藏',
-                }
-              : const {},
+          sourceOptions: const {},
           hint: '只调整立体书架，下方列表保留自己的分类、筛选和排序。',
           reduceMotion: state.reduceMotion,
         ),
@@ -2705,9 +2672,6 @@ class _ShelfPageState extends State<ShelfPage>
   Widget _gridRow(BuildContext context, Novel book) => BookGridTile(
     key: ValueKey('shelf-grid-book-${book.id}'),
     book: book,
-    sourceLabel: state.combinedShelf
-        ? bookshelfSource(book.id, _offline)
-        : null,
     coverHeroTag: CoverHeroTag(this, book.id),
     progress: _progressLabel(book),
     onTap: () => openDetail(
@@ -2735,9 +2699,6 @@ class _ShelfPageState extends State<ShelfPage>
   Widget _row(BuildContext context, Novel book) => NovelRow(
     key: ValueKey('shelf-book-${book.id}'),
     novel: book,
-    sourceLabel: state.combinedShelf
-        ? bookshelfSource(book.id, _offline)
-        : null,
     coverHeroTag: CoverHeroTag(this, book.id),
     onTap: () => openDetail(
       context,
@@ -2813,23 +2774,10 @@ class _ShelfPageState extends State<ShelfPage>
           onGridDensity: (v) => save(gridDensity: v),
           reading: state.shelfFilter,
           sort: state.shelfSort,
-          source: state.combinedShelf ? state.shelfSourceFilter : null,
           onView: (v) => save(layout: v ? 'shelf' : 'list'),
           onReading: (v) => save(filter: v),
           onSource: (v) => save(source: v),
           onSort: (v) => save(sort: v),
-          footer:
-              state.combinedShelf && _offline?.local?.books.isNotEmpty == true
-              ? GlassTextButton(
-                  key: const ValueKey('shelf-manage-local'),
-                  onPressed: () => openLocalBookBatch(
-                    context,
-                    books: _offline!.local!,
-                    library: state,
-                  ),
-                  child: const AppText('批量整理本地书'),
-                )
-              : null,
         );
       },
     ),
@@ -2859,14 +2807,7 @@ class _ShelfPageState extends State<ShelfPage>
             shelfPreferences: state.shelfPreferences,
             shelfContent: state.shelfContent,
             shelfCategoryOptions: _shelfContentCategories,
-            shelfSourceOptions: state.combinedShelf
-                ? const {
-                    'all': '全部来源',
-                    'local': '本地导入',
-                    'cached': '已缓存',
-                    'online': '在线收藏',
-                  }
-                : const {},
+            shelfSourceOptions: const {},
             shelfContentHint: '仅调整上方立体书架；下方继续使用页面上的分类、筛选和排序。',
             reduceMotion: state.reduceMotion,
             onShelfPreferencesChanged: (preferences) =>
@@ -3046,7 +2987,7 @@ class SettingsPage extends StatelessWidget {
             context,
             id: 'usage',
             title: '使用方式',
-            subtitle: '启动与续读、书架及离线适配',
+            subtitle: '启动与续读',
             code: 'SYSTEM / USAGE',
             icon: CupertinoIcons.square_grid_2x2,
             options: _usageOptions,
@@ -3072,21 +3013,6 @@ class SettingsPage extends StatelessWidget {
             options: _effectsOptions,
           ),
           const SizedBox(height: 14),
-          if (LanSyncScope.maybeOf(context) case final sync?) ...[
-            FeatureEntry(
-              key: const ValueKey('settings-lan-sync'),
-              title: '局域网续读',
-              subtitle: '连接自己的设备，接着上次的位置阅读',
-              icon: CupertinoIcons.wifi,
-              onTap: () => pushNovelPage<void>(
-                context,
-                LanReadingPage(sync: sync, reduceMotion: state.reduceMotion),
-                reduceMotion: state.reduceMotion,
-                slot: ('settings', 'lan-reading'),
-              ),
-            ),
-            const SizedBox(height: 14),
-          ],
           FeatureEntry(
             key: const ValueKey('settings-reading-widgets'),
             title: '小组件',
@@ -3104,7 +3030,7 @@ class SettingsPage extends StatelessWidget {
             context,
             id: 'data',
             title: '数据与存储',
-            subtitle: '阅读历史、缓存管理与备份恢复',
+            subtitle: '阅读历史与备份恢复',
             code: 'SYSTEM / STORAGE',
             icon: CupertinoIcons.folder,
             options: _dataOptions,
@@ -3177,43 +3103,12 @@ class SettingsPage extends StatelessWidget {
             keyName: 'settings-direct-reading',
             icon: CupertinoIcons.book_fill,
             title: '点书直接阅读',
-            description: '选择适用页面（可多选），从上次位置继续',
-            value: state.directReading,
-            onChanged: state.setDirectReading,
-          ),
-          if (state.directReading)
-            Padding(
-              padding: const EdgeInsets.only(top: 8, left: 36),
-              child: Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  for (final page in ReadingEntry.values)
-                    GlassTextButton(
-                      key: ValueKey('settings-direct-reading-${page.name}'),
-                      selected: state.directReadingOn(page),
-                      onPressed: () => _savePreference(
-                        context,
-                        () => state.setDirectReadingPages({
-                          ...state.directReadingPages.where((p) => p != page),
-                          if (!state.directReadingOn(page)) page,
-                        }),
-                      ),
-                      child: AppText(page.label),
-                    ),
-                ],
-              ),
-            ),
-          const Divider(height: 22),
-          GlassSettingMenu<AppStartPage>(
-            key: const ValueKey('settings-start-page'),
-            icon: CupertinoIcons.house,
-            label: '启动页面',
-            value: state.startPage,
-            options: {for (final page in AppStartPage.values) page: page.label},
-            reduceMotion: state.reduceMotion,
-            onChanged: (page) =>
-                _savePreference(context, () => state.setStartPage(page)),
+            description: '在书架点书时跳过详情，从上次位置继续',
+            value: state.directReadingOn(ReadingEntry.shelf),
+            onChanged: (value) async {
+              await state.setDirectReading(value);
+              if (value) await state.setDirectReadingPages({ReadingEntry.shelf});
+            },
           ),
           const Divider(height: 22),
           _toggleSetting(
@@ -3224,40 +3119,6 @@ class SettingsPage extends StatelessWidget {
             description: '打开应用后进入最近读过的书',
             value: state.openRecentOnLaunch,
             onChanged: state.setOpenRecentOnLaunch,
-          ),
-          const Divider(height: 22),
-          _toggleSetting(
-            context,
-            keyName: 'settings-combined-shelf',
-            icon: CupertinoIcons.square_stack,
-            title: '合并书架',
-            description: '收藏与本地书统一显示在书架，试读缓存不加入',
-            value: state.combinedShelf,
-            onChanged: (value) => state.setNavigationMode(combinedShelf: value),
-          ),
-          const Divider(height: 22),
-          _toggleSetting(
-            context,
-            keyName: 'settings-adapt-offline',
-            icon: CupertinoIcons.wifi_slash,
-            title: '离线适配',
-            description: state.combinedShelf
-                ? '断网后隐藏发现，书架保留已缓存的收藏和本地书籍'
-                : '断网后隐藏发现，书架只显示已缓存的收藏',
-            value: state.adaptWhenOffline,
-            onChanged: (value) =>
-                state.setNavigationMode(adaptWhenOffline: value),
-          ),
-          const Divider(height: 22),
-          _toggleSetting(
-            context,
-            keyName: 'settings-local-reader-mode',
-            icon: CupertinoIcons.book,
-            title: '阅读器模式',
-            description: state.combinedShelf ? '只显示离线可读的合并书架和我的' : '只显示本地和我的',
-            value: state.localReaderMode,
-            onChanged: (value) =>
-                state.setNavigationMode(localReaderMode: value),
           ),
         ],
       ),
@@ -3365,22 +3226,6 @@ class SettingsPage extends StatelessWidget {
         ],
       ),
     ),
-    if (LocalPlatform.listening) ...[
-      if (ListeningScope.maybeOf(context) case final listening?)
-        if (listening.customSpeech case final settings?) ...[
-          const SizedBox(height: 14),
-          FeatureEntry(
-            title: '自定义语音接口',
-            subtitle: 'Microsoft SSML 兼容服务',
-            icon: CupertinoIcons.waveform,
-            onTap: () => pushNovelPage<void>(
-              context,
-              CustomSpeechPage(settings: settings, controller: listening),
-              reduceMotion: state.reduceMotion,
-            ),
-          ),
-        ],
-    ],
   ];
 
   List<Widget> _effectsOptions(BuildContext context) => [
@@ -3530,36 +3375,6 @@ class SettingsPage extends StatelessWidget {
             Expanded(
               child: AppText(
                 '阅读历史',
-                style: TextStyle(fontWeight: FontWeight.w600),
-              ),
-            ),
-            ArchiveIcon(CupertinoIcons.chevron_right, size: 14),
-          ],
-        ),
-      ),
-      const SizedBox(height: 24),
-    ],
-    if (repository case final OfflineNovelRepository offline) ...[
-      sectionHeader(context, '离线阅读', ''),
-      const SizedBox(height: 14),
-      ContentPanel(
-        onTap: () => pushNovelPage<void>(
-          context,
-          OfflineCachePage(
-            repository: offline,
-            reduceMotion: state.reduceMotion,
-            onOpen: (pageContext, novel) =>
-                openDetail(pageContext, novel, state, offline, fromCache: true),
-          ),
-          reduceMotion: state.reduceMotion,
-        ),
-        child: const Row(
-          children: [
-            ArchiveIcon(CupertinoIcons.cloud_download, size: 21),
-            SizedBox(width: 12),
-            Expanded(
-              child: AppText(
-                '缓存管理',
                 style: TextStyle(fontWeight: FontWeight.w600),
               ),
             ),
@@ -4959,7 +4774,7 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin {
                 () => AppText(
                   loadError != null
                       ? '目录暂未载入'
-                      : '${novel.isComplete ? '已完结' : '连载中'} · ${bookshelfSource(novel.id, repository is OfflineNovelRepository ? repository as OfflineNovelRepository : null)}',
+                      : '共 ${novel.chapters.length} 章',
                   style: TextStyle(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                     fontSize: 13,
@@ -9302,47 +9117,11 @@ class _ReaderPageState extends State<ReaderPage>
     );
   }
 
-  bool _canHandoff(BuildContext context) {
-    final sync = LanSyncScope.maybeOf(context);
-    return isLocalBook(widget.novel.id)
-        ? sync?.books != null
-        : widget.novel.id > 0 && sync?.repository != null;
-  }
-
   double _readerHeaderExtent(BuildContext context) =>
       math.max(46, MediaQuery.textScalerOf(context).scale(16) * 1.25);
 
   // The secondary action floats independently. It must not extend the title
   // row's full-width blur/shade or change its entrance travel distance.
-  Widget _readerHandoff(BuildContext context) => Listener(
-    onPointerDown: (_) => _contentTapSurface.commitPreview(),
-    child: ReaderChromeLayer(
-      key: const ValueKey('reader-chrome-handoff'),
-      animation: _chrome.drive(CurveTween(curve: const Interval(0, .90))),
-      interactionThreshold: 0,
-      slide: const Offset(0, -1),
-      curve: NovelMotion.settle,
-      scaleFrom: .96,
-      clip: false,
-      child: Padding(
-        padding: EdgeInsets.fromLTRB(
-          16 + MediaQuery.viewPaddingOf(context).left,
-          0,
-          16 + MediaQuery.viewPaddingOf(context).right,
-          4,
-        ),
-        child: Center(
-          child: ControlMaterialScope.chrome(
-            child: ReaderHandoffChip(
-              key: const ValueKey('reader-header-handoff'),
-              onPressed: _openHandoff,
-            ),
-          ),
-        ),
-      ),
-    ),
-  );
-
   Widget _readerHeader(BuildContext context) => Listener(
     onPointerDown: (_) => _contentTapSurface.commitPreview(),
     child: ReaderChromeLayer(
@@ -10137,13 +9916,6 @@ class _ReaderPageState extends State<ReaderPage>
           _readerScrollInformation(chapter),
           _readerScrollInformation(chapter, footer: true),
           Positioned(top: 0, left: 0, right: 0, child: _readerHeader(context)),
-          if (_canHandoff(context))
-            Positioned(
-              top: _readerHeaderTop(context) + _readerHeaderExtent(context) + 2,
-              left: 0,
-              right: 0,
-              child: _readerHandoff(context),
-            ),
           Align(
             alignment: Alignment.bottomCenter,
             child: Padding(
@@ -10832,7 +10604,6 @@ class _ReaderPageState extends State<ReaderPage>
           initialBookmarks: bookmarks,
           initialTab: initialTab,
           scope: scope,
-          canHandoff: _canHandoff(context),
           listeningBuilder: _listening == null
               ? null
               : (sheetContext) => ListeningPanel(
@@ -10916,40 +10687,8 @@ class _ReaderPageState extends State<ReaderPage>
       case ReaderOpenIllustrations():
         _toolsOpen = false;
         await _openIllustrationLayout();
-      case ReaderOpenHandoff():
-        _toolsOpen = false;
-        await _openHandoff();
-      case null:
+      case ReaderOpenHandoff() || null:
         break;
-    }
-  }
-
-  Future<void> _openHandoff() async {
-    if (_toolsOpen || _catalogueOpen || _findOpen || _detailsOpen) return;
-    final sync = LanSyncScope.maybeOf(context);
-    final position = _currentPosition();
-    if (!_canHandoff(context) || sync == null || position == null) return;
-    _cancelExitRequest();
-    _selection.clear();
-    _stopAutoScroll();
-    _followTicket++;
-    _followScroll.cancel();
-    _toolsOpen = true;
-    try {
-      await showJellySheet<void>(
-        context: context,
-        reduceMotion: widget.state.reduceMotion,
-        surfaceWrapper: _readerSurface,
-        builder: (_) => LanSendBookSheet(
-          sync: sync,
-          book: _sourceBook,
-          position: position,
-          reduceMotion: widget.state.reduceMotion,
-        ),
-      );
-    } finally {
-      _toolsOpen = false;
-      _savePosition(notify: false);
     }
   }
 

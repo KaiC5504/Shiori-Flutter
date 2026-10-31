@@ -474,19 +474,21 @@ class LocalBookImporter extends ChangeNotifier {
       if (fromScan) {
         final snapshot = await documents.scanBooks();
         if (!context.mounted || _disposed) return;
-        if (automatic) {
+        if (automatic && snapshot.books.isEmpty) {
           scanResult = LocalScanResult(
             report: const LocalImportReport(bookIds: [], added: 0, existing: 0),
             total: snapshot.total,
             unchanged: snapshot.unchanged,
             warnings: snapshot.warnings,
-            pending: snapshot.books.length,
           );
           _changed();
           await documents.finishBookScan();
           return;
         }
-        final selected = snapshot.books.isEmpty
+        // Books dropped into the watched folder go straight onto the shelf.
+        final selected = automatic
+            ? {for (final book in snapshot.books) book.token}
+            : snapshot.books.isEmpty
             ? <String>{}
             : await pushNovelPage<Set<String>>(
                 context,

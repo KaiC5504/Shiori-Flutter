@@ -12,8 +12,6 @@ import 'cache.dart';
 import 'languages.dart';
 import 'models.dart';
 import 'store.dart';
-import 'custom_tts.dart';
-import 'enhancement.dart';
 
 abstract interface class ListeningAudioOutput {
   Stream<Duration> get positions;
@@ -130,11 +128,9 @@ class ListeningController {
     required this.audio,
     required this.store,
     required this.outputFactory,
-    this.customSpeech,
     this.preparationTimeout = const Duration(seconds: 35),
     this.decoderTimeout = const Duration(seconds: 10),
-    ListeningEnhancement? enhancement,
-  }) : enhancement = enhancement ?? ListeningEnhancement() {
+  }) {
     _voiceOverrides = store.languageVoices(store.voice);
     snapshot.value = ListeningSnapshot(
       voice: store.voice,
@@ -143,13 +139,10 @@ class ListeningController {
       paragraphGapMs: store.paragraphGapMs,
       follow: store.follow,
     );
-    unawaited(this.enhancement.configure(store.enhancement));
   }
   final NovelRepository repository;
   final SpeechAudioSource audio;
   final ListeningStore store;
-  final ListeningEnhancement enhancement;
-  final CustomSpeechSettings? customSpeech;
   final Duration preparationTimeout, decoderTimeout;
   final Future<ListeningAudioOutput> Function(ListeningController controller)
   outputFactory;
@@ -1697,13 +1690,6 @@ class ListeningController {
     if (value == 0) _cancelParagraphGap();
   }
 
-  /// Save optional gain separately; it never enters the playback command queue.
-  Future<void> setEnhancement(ListeningEnhancementPreference value) async {
-    if (_disposed) return;
-    await store.saveEnhancement(value);
-    if (!_disposed) await enhancement.setPreference(value);
-  }
-
   void setSleep({Duration? duration, bool afterChapter = false}) {
     _sleep?.cancel();
     final until = duration != null ? DateTime.now().add(duration) : null;
@@ -1800,7 +1786,6 @@ class ListeningController {
     await _positions?.cancel();
     await _completions?.cancel();
     await _output?.dispose();
-    await enhancement.dispose();
     snapshot.dispose();
     progress.dispose();
     chapterProgress.dispose();

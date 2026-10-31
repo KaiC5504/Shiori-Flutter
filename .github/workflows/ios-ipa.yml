@@ -1,0 +1,100 @@
+# Unsigned IPA for sideloading (Sideloadly, AltStore, …). No secrets are used,
+# so the public log and artifact are safe. Pushing a v* tag also publishes
+# the IPA as a GitHub Release.
+name: iOS IPA
+
+on:
+  push:
+    branches: [dev, master]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ios-ipa-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  FLUTTER_VERSION: 3.47.8
+  XCODE_VERSION: "26.6"
+
+jobs:
+  test:
+    name: Analyze and test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: false
+
+      - run: flutter pub get
+      - run: flutter analyze --no-fatal-infos
+      - run: flutter test
+
+  ipa:
+    name: Build unsigned IPA
+    needs: test
+    runs-on: macos-26
+    timeout-minutes: 45
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: false
+
+      - name: Select Xcode
+        run: |
+          xcode="/Applications/Xcode_${XCODE_VERSION}.app"
+          if [ ! -d "$xcode" ]; then
+            echo "Xcode $XCODE_VERSION isn't on this image. Installed:"
+            ls -d /Applications/Xcode_*.app
+            exit 1
+          fi
+          sudo xcode-select -s "$xcode"
+          xcodebuild -version
+
+      - run: flutter pub get
+
+      - name: Build
+        run: flutter build ios --release --no-codesign --build-number="$GITHUB_RUN_NUMBER"
+
+      - name: Package IPA
+        id: package
+        run: |
+          version=$(sed -n 's/^version: *\([^+]*\).*/\1/p' pubspec.yaml)
+          name="Shiori-${version}-${GITHUB_RUN_NUMBER}-unsigned.ipa"
+          mkdir -p dist/Payload
+          cp -R build/ios/iphoneos/Runner.app dist/Payload/
+          (cd dist && zip -qry "$name" Payload)
+          ls -lh "dist/$name"
+          echo "name=$name" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: shiori-ipa
+          path: dist/${{ steps.package.outputs.name }}
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Publish release
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" "dist/${{ steps.package.outputs.name }}" --title "$GITHUB_REF_NAME" --generate-notes

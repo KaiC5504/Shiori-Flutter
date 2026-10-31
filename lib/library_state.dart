@@ -952,15 +952,16 @@ class LibraryState extends ChangeNotifier {
   Listenable get readerBehaviorChanges => _readerBehaviorChanges;
   Listenable get navigationChanges => _navigationChanges;
   bool get adaptWhenOffline => _adaptWhenOffline;
-  bool get localReaderMode => _localReaderMode;
+  // Shiori is local-only: the merged shelf and 我的 are the only tabs.
+  bool get localReaderMode => true;
   bool get directReading => _directReadingEnabled;
   bool get openRecentOnLaunch => _openRecentOnLaunch;
-  AppStartPage get startPage => _startPage;
+  AppStartPage get startPage => AppStartPage.shelf;
   Set<ReadingEntry> get directReadingPages =>
       Set.unmodifiable(_directReadingPages);
   bool directReadingOn(ReadingEntry page) =>
       directReading && _directReadingPages.contains(page);
-  bool get combinedShelf => _combinedShelf;
+  bool get combinedShelf => true;
   List<String> get recentSearches => List.unmodifiable(_recentSearches);
   String get shelfSort => _shelfSort;
   String get shelfFilter => _shelfFilter;
